@@ -183,9 +183,9 @@ See the [LICENSE](LICENSE) file for the full legal text.
 
 ## 👤 Author
 
-Your Name
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourusername)
+Sayan Jagulia
+- GitHub: https://github.com/SaYaN00101
+- LinkedIn: www.linkedin.com/in/sayan-jagulia-s1y1n 
 
 <div align="center">
   <img src="assets/footer.png" alt="Thank You" width="400"/>
@@ -195,4 +195,5 @@ Your Name
 ---
 <div align="center">
   Made with ❤️ and Python
+
 </div>
