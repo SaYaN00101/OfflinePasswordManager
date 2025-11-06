@@ -51,16 +51,16 @@ Offline Password Manager is a robust and secure solution for managing your passw
 ## 🖼️ Screenshots
 
 <div align="center">
-  <img src="assets/login.png" alt="Login Screen" width="400"/>
+  <img src="https://github.com/user-attachments/assets/beea7576-b5f8-43e6-b9b9-2aa6f851c13a" alt="Login Screen" width="400"/>
   <p><em>Secure Login with Master Password</em></p>
-  
-  <img src="assets/dashboard.png" alt="Dashboard" width="400"/>
+
+  <img src="https://github.com/user-attachments/assets/79022635-cc1f-44f2-a49e-0bb1580aae4f" alt="Dashboard" width="400"/>
   <p><em>Modern Dashboard Interface</em></p>
   
-  <img src="assets/add_password.png" alt="Add Password" width="400"/>
+  <img src="https://github.com/user-attachments/assets/7b4f3f59-4393-42de-ad1d-91ea7f0e858c" alt="Add Password" width="400"/>
   <p><em>Add New Credentials with Strength Meter</em></p>
   
-  <img src="assets/settings.png" alt="Settings" width="400"/>
+  <img src="https://github.com/user-attachments/assets/d3e54e4a-874a-4582-a580-0f69dc7a4420" alt="Settings" width="400"/>
   <p><em>Customizable Settings and Backup Options</em></p>
 </div>
 
@@ -188,7 +188,7 @@ Sayan Jagulia
 - LinkedIn: www.linkedin.com/in/sayan-jagulia-s1y1n 
 
 <div align="center">
-  <img src="assets/footer.png" alt="Thank You" width="400"/>
+  <img src="https://github.com/user-attachments/assets/bba89c8b-fb88-404c-acb3-293b6dc8ffd0" alt="Thank You" width="400"/>
   <p><em>Thank you for using Offline Password Manager!</em></p>
 </div>
 
@@ -197,4 +197,5 @@ Sayan Jagulia
   Made with ❤️ and Python
 
 </div>
+
 
