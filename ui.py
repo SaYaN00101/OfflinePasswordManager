@@ -37,23 +37,54 @@ def show_login_screen():
         widget.destroy()
 
     frame = ctk.CTkFrame(app, corner_radius=20)
-    frame.pack(padx=60, pady=80, fill="both", expand=True)
+    frame.pack(padx=60, pady=60, fill="both", expand=True)
 
-    ctk.CTkLabel(frame, text="🔐 Offline Password Manager", font=("Arial", 24, "bold")).pack(pady=(20, 5))
-    ctk.CTkLabel(frame, text="Enter your master password to unlock", font=("Arial", 14)).pack(pady=(0, 20))
+    # Header / Logo
+    header = ctk.CTkFrame(frame, fg_color="transparent")
+    header.pack(pady=(10, 8))
+    ctk.CTkLabel(header, text="🔐 Offline Password Manager", font=("Arial", 22, "bold")).pack()
+    ctk.CTkLabel(header, text="Enter your master password to unlock your vault", font=("Arial", 12), text_color="gray").pack()
 
-    password_entry = ctk.CTkEntry(frame, show="*", width=280, height=40, placeholder_text="Master Password")
-    password_entry.pack(pady=10)
+    # Entry area
+    content = ctk.CTkFrame(frame, fg_color="transparent")
+    content.pack(pady=(10, 10))
+
+    password_entry = ctk.CTkEntry(content, show="*", width=320, height=40, placeholder_text="Master Password")
+    password_entry.grid(row=0, column=0, columnspan=2, pady=(6, 4))
+    password_entry.focus()
+
+    show_pwd_var = ctk.BooleanVar(value=False)
+    def toggle_show_pwd():
+        password_entry.configure(show="" if show_pwd_var.get() else "*")
+    ctk.CTkCheckBox(content, text="Show password", variable=show_pwd_var, command=toggle_show_pwd).grid(row=1, column=0, sticky="w", padx=(8,0))
+
+    remember_var = ctk.BooleanVar(value=False)
+    ctk.CTkCheckBox(content, text="Remember session", variable=remember_var).grid(row=1, column=1, sticky="e", padx=(0,8))
 
     error_label = ctk.CTkLabel(frame, text="", text_color="red")
-    error_label.pack(pady=5)
+    error_label.pack(pady=(6, 4))
+
+    # Convenience: press Enter to submit
+    password_entry.bind("<Return>", lambda e: check_login())
 
     def check_login():
-        entered_password = password_entry.get()
+        entered_password = password_entry.get().strip()
+        if not entered_password:
+            error_label.configure(text="❌ Please enter your password")
+            return
+
         result = verify_master_password(entered_password)
 
         if result is True:
             session.current_master_password = entered_password  # store globally in session
+            # mark activity now that the user has logged in so the timeout doesn't trigger immediately
+            try:
+                session.update_activity()
+            except Exception:
+                pass
+            # extend session if user asked to remember (keep it alive longer)
+            if remember_var.get():
+                session.extend_session = True if hasattr(session, "extend_session") else None
             show_dashboard()
             start_session_monitor()
 
@@ -62,19 +93,21 @@ def show_login_screen():
             show_set_master_ui()
         else:
             error_label.configure(text="❌ Incorrect password!")
+            # keep focus on entry for quick retry
+            password_entry.focus()
+            password_entry.select_range(0, "end")
 
+    # Buttons
+    btn_frame = ctk.CTkFrame(frame, fg_color="transparent")
+    btn_frame.pack(pady=(6, 4))
 
-    # --- Buttons ---
-    ctk.CTkButton(frame, text="Login", width=200, height=40, command=check_login).pack(pady=10)
-
-    # Show "Set Master Password" only if no master.key exists
+    ctk.CTkButton(btn_frame, text="Login", width=200, height=40, command=check_login).grid(row=0, column=0, padx=6, pady=6)
+    # Only show "Set Master Password" if master.key doesn't exist
     if not os.path.exists("master.key"):
-        ctk.CTkButton(frame, text="Set Master Password", width=200, command=show_set_master_ui).pack(pady=5)
+        ctk.CTkButton(btn_frame, text="Set Master Password", width=200, command=show_set_master_ui).grid(row=1, column=0, padx=6, pady=4)
+    ctk.CTkButton(btn_frame, text="Forgot Password?", fg_color="gray", width=200, command=forgot_password_ui).grid(row=2, column=0, padx=6, pady=4)
 
-    ctk.CTkButton(frame, text="Forgot Password?", fg_color="gray", width=200, command=forgot_password_ui).pack(pady=5)
 
-
-# ---------- SET MASTER PASSWORD ----------
 def show_set_master_ui():
     for widget in app.winfo_children():
         widget.destroy()
@@ -82,65 +115,143 @@ def show_set_master_ui():
     from utils import show_password_strength
 
     frame = ctk.CTkFrame(app, corner_radius=20)
-    frame.pack(padx=60, pady=80, fill="both", expand=True)
+    frame.pack(padx=40, pady=40, fill="both", expand=True)
 
-    # --- Title ---
-    ctk.CTkLabel(frame, text="🛡️ Set Master Password", font=("Arial", 24, "bold")).pack(pady=(20, 5))
-    ctk.CTkLabel(frame, text="Create a strong password to secure your vault", font=("Arial", 14)).pack(pady=(0, 10))
+    # Title
+    ctk.CTkLabel(frame, text="🛡️ Set Master Password", font=("Arial", 22, "bold")).pack(pady=(8, 4))
+    ctk.CTkLabel(frame, text="Choose a strong master password. You will not be able to recover it.", font=("Arial", 12), text_color="gray").pack(pady=(0, 8))
 
-    # --- Warning Label (starts invisible) ---
+    # Warning (animated color)
     warning_label = ctk.CTkLabel(
         frame,
-        text="⚠️ Warning: If you forget your master password,\nthere is *no way* to recover your data!",
-        font=("Arial", 13, "italic"),
-        text_color=("gray70", "gray70")  # start dim
+        text="⚠️ Warning: If you forget this password, all stored data will be unrecoverable!",
+        font=("Arial", 12, "italic"),
+        text_color=("gray70", "gray70")
     )
-    warning_label.pack(pady=(0, 20))
+    warning_label.pack(pady=(4, 8))
 
-    # --- Fade-in Effect for Warning ---
     def fade_in(step=0):
-        colors = [
-            "gray70", "gray60", "gray50", "gray40",
-            "orange3", "orange2", "orange"
-        ]
+        colors = ["gray70", "gray60", "gray50", "gray40", "orange3", "orange2", "orange"]
         if step < len(colors):
             warning_label.configure(text_color=colors[step])
-            frame.after(150, fade_in, step + 1)
+            frame.after(120, fade_in, step + 1)
+    fade_in()
 
-    fade_in()  # start the animation
-
-    # --- Input Fields ---
-    # Add password strength meter
+    # Strength meter area
     strength_label = ctk.CTkLabel(frame, text="", font=("Arial", 12))
-    strength_label.pack(pady=5)
+    strength_label.pack(pady=(6, 4))
+    strength_bar = ctk.CTkProgressBar(frame, width=320)
+    strength_bar.pack(pady=(0, 8))
 
-    password_entry = ctk.CTkEntry(frame, show="*", width=280, height=40, placeholder_text="Enter new master password")
-    password_entry.pack(pady=8)
+    # Password fields
+    inputs = ctk.CTkFrame(frame, fg_color="transparent")
+    inputs.pack(pady=(4, 8))
 
-    def update_strength_meter(event=None):
-        pwd = password_entry.get()
-        strength_text, strength_color = show_password_strength(pwd)
-        strength_label.configure(text=strength_text, text_color=strength_color)
+    password_entry = ctk.CTkEntry(inputs, show="*", width=320, height=40, placeholder_text="Enter new master password")
+    password_entry.grid(row=0, column=0, columnspan=2, pady=(4, 6))
+    password_entry.focus()
 
-    password_entry.bind("<KeyRelease>", update_strength_meter)
+    confirm_entry = ctk.CTkEntry(inputs, show="*", width=320, height=40, placeholder_text="Confirm master password")
+    confirm_entry.grid(row=1, column=0, columnspan=2, pady=(4, 6))
 
-    confirm_entry = ctk.CTkEntry(frame, show="*", width=280, height=40, placeholder_text="Confirm master password")
-    confirm_entry.pack(pady=8)
+    show_pwd_var = ctk.BooleanVar(value=False)
+    def toggle_show():
+        s = "" if show_pwd_var.get() else "*"
+        password_entry.configure(show=s)
+        confirm_entry.configure(show=s)
+    ctk.CTkCheckBox(inputs, text="Show passwords", variable=show_pwd_var, command=toggle_show).grid(row=2, column=0, sticky="w", padx=(4,0))
+
 
     message_label = ctk.CTkLabel(frame, text="", text_color="lightgray")
-    message_label.pack(pady=5)
+    message_label.pack(pady=(6, 4))
 
-    # --- Button Action ---
+    # Validate inputs and update strength UI
+    def password_score(pwd: str):
+        has_len = len(pwd) >= 12
+        has_upper = any(c.isupper() for c in pwd)
+        has_lower = any(c.islower() for c in pwd)
+        has_digit = any(c.isdigit() for c in pwd)
+        has_symbol = any(not c.isalnum() for c in pwd)
+        score = sum([has_len, has_upper, has_lower, has_digit, has_symbol])
+        return {
+            "has_len": has_len,
+            "has_upper": has_upper,
+            "has_lower": has_lower,
+            "has_digit": has_digit,
+            "has_symbol": has_symbol,
+            "score": score
+        }
+
+    def update_strength(event=None):
+        pwd = password_entry.get()
+        info = password_score(pwd)
+        # Requirements UI removed — update strength display only
+
+        # use utils function for a friendly label if available
+        try:
+            friendly, color = show_password_strength(pwd)
+            strength_label.configure(text=friendly, text_color=color)
+        except Exception:
+            # fallback
+            strength_label.configure(text=f"Strength: {info['score']}/5", text_color="gray")
+
+        strength_bar.set(info["score"] / 5 if info["score"] > 0 else 0)
+        # color progress bar if supported
+        try:
+            if info["score"] <= 2:
+                strength_bar.configure(progress_color="red")
+            elif info["score"] == 3:
+                strength_bar.configure(progress_color="orange")
+            else:
+                strength_bar.configure(progress_color="green")
+        except Exception:
+            pass
+
+        # Enable/disable set button depending on rules and match
+        pw = password_entry.get()
+        match = pw and (pw == confirm_entry.get())
+        requirements_ok = info["score"] >= 4  # require at least 4/5
+        if requirements_ok and match:
+            set_btn.configure(state="normal")
+            message_label.configure(text="")
+        else:
+            set_btn.configure(state="disabled")
+            if not match and confirm_entry.get():
+                message_label.configure(text="⚠️ Passwords do not match")
+            else:
+                message_label.configure(text="")
+
+    password_entry.bind("<KeyRelease>", update_strength)
+    confirm_entry.bind("<KeyRelease>", update_strength)
+    password_entry.bind("<Return>", lambda e: confirm_entry.focus())
+    confirm_entry.bind("<Return>", lambda e: set_password())
+
+    # Action
     def set_password():
-        result = set_master_password_ui(password_entry.get(), confirm_entry.get())
+        pwd = password_entry.get()
+        confirm = confirm_entry.get()
+        if not pwd or not confirm:
+            message_label.configure(text="❌ Fill both fields")
+            return
+        # Call existing UI-level setter which returns a status string
+        result = set_master_password_ui(pwd, confirm)
         message_label.configure(text=result)
         if "✅" in result:
             messagebox.showinfo("Success", "Master password set successfully!")
             show_login_screen()
 
-    # --- Buttons ---
-    ctk.CTkButton(frame, text="Set Password", width=200, height=40, command=set_password).pack(pady=10)
-    ctk.CTkButton(frame, text="⬅ Back to Login", fg_color="gray", width=200, height=35, command=show_login_screen).pack(pady=5)
+    # Buttons
+    btns = ctk.CTkFrame(frame, fg_color="transparent")
+    btns.pack(pady=(6, 6))
+    
+    set_btn = ctk.CTkButton(btns, text="Set Password", width=200, height=40, command=set_password, state="disabled")
+    set_btn.pack(pady=6)
+    
+    back_btn = ctk.CTkButton(btns, text="⬅ Back to Login", fg_color="gray", width=200, height=36, command=show_login_screen)
+    back_btn.pack(pady=6)
+
+    # initial update to reflect empty state
+    update_strength()
 
 # ---------- DASHBOARD ----------
 def show_dashboard():
