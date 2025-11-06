@@ -2,11 +2,11 @@
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform](https://img.shields.io/badge/platform-windows%20%7C%20linux-lightgrey)](https://github.com/yourusername/OfflinePasswordManager)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/yourusername/OfflinePasswordManager)
+[![Platform](https://img.shields.io/badge/platform-windows%20%7C%20linux-lightgrey)](https://github.com/SaYaN00101/OfflinePasswordManager)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/SaYaN00101/OfflinePasswordManager)
 
 <div align="center">
-  <img src="assets/banner.png" alt="Password Manager Banner" width="800"/>
+  <img src="https://github.com/user-attachments/assets/bca05455-b2b3-4113-8e9d-6da933e9b7c5" alt="Password Manager Banner" width="800"/>
   <br>
   <p>
     <em>A secure, modern, and fully offline password management solution</em>
@@ -197,3 +197,4 @@ Sayan Jagulia
   Made with ❤️ and Python
 
 </div>
+
